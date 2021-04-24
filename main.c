@@ -93,7 +93,10 @@ void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
 
+// Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
+
+// Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
 volatile uint8_t cursor_row = 0;
 
 // Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
@@ -177,28 +180,35 @@ void lcd_clear_from(uint8_t pos) {
 
 /** Wypisuje tekst */
 void lcd_text(char *chars) {
+	// Iteruje po znakach we wskazanym lancuchu
 	for (uint8_t i = 0; chars[i]; i++) {
+
+		// Jezeli brakuje miejsca w linii, przechodzi do nastepnej
 		if (i==16)
 			lcd_move_cursor(1,0);
 
+		// Wypisuje znak
 		lcd_send(chars[i]);
 	}
 }
 
 /** Rejestruje nowy znak w pamieci LCD */
 void lcd_new_sign(char* sign, uint8_t index) {
+	// Przenosi kursor do miejsca przeznaczonego na zapis znaku
 	lcd_cmd(0x40 + index * 8);
 
+	// Przesyla wszystkie bajty znaku we wskazane mejsce
 	for (uint8_t i = 0; i < 8; i++)
 		lcd_send(sign[i]);
 }
 
 /** Inicializuje LCD */
 void lcd_init() {
-	LCD_DDR = (0xF0) | (_BV(LCD_RS)) | (_BV(LCD_EN)); // ustawienie kierunku wyjsciowego dla wszystkich linii
+	// Ustawia wszystkie linie na wyjscie
+	LCD_DDR = (0xF0) | (_BV(LCD_RS)) | (_BV(LCD_EN));
 	LCD_PORT = 0;
 
-	// Ustawienie trybu 4-bitowego
+	// Ustawia tryb 4-bitowy
 	lcd_cmd(0x02);
 
 	//ustawienie param wyswietlacza
@@ -216,52 +226,83 @@ void lcd_init() {
 	//bit0: 1 - kursor miga, 0 - kursor nie miga
 	lcd_cmd(0b00001100);
 	
+	// Czysci LCD
 	lcd_clear();
 }
 
-/** Przesyla rozkaz wyczyszczenia LCD */
+/** Przesyla komende wyczyszczenia LCD */
 void lcd_clear() {
 	lcd_cmd(LCD_CLEAR);
 }
 
-/** Przesyla rozkaz przeniesienia kursora */
+/** Przesyla komende przeniesienia kursora */
 void lcd_move_cursor(unsigned char w, unsigned char h) {
+	// Zachowuje nowa pozycje w pamieci
 	cursor_row = w;
+
+	// Przenosi kursor w wyznaczone miejsce
 	lcd_cmd((w * 0x40 + h) | 0x80);
 }
 
-/** Przesyla rozkaz */
+/** Przesyla wybrana komende */
 void lcd_cmd(uint8_t command) {
+	// Przelacza LCD w tryb komend
 	LCD_PORT &= ~(_BV(LCD_RS));
+
+	// Przesyla wskazany bajt komendy
 	lcd_send(command);
+
+	// Przelacza LCD w tryb danych
 	LCD_PORT |= _BV(LCD_RS);
+
 	_delay_ms(5);
 }
 
 /** Przesyla bajt */
 void lcd_send(uint8_t b) {
-	lcd_send_nibble(b & 0xF0); //wyslanie 4 starszych bitow
-	asm volatile("nop"); // wstawka assemblerowa - odczekanie jednego cyklu
-	lcd_send_nibble((b & 0x0F) << 4); //wyslanie 4 mlodszych bitow
+	// Przesyla starszy polbajt
+	lcd_send_nibble(b & 0xF0);
 
-	_delay_us(50); 	//odczekanie czasu na potwierdzenie wyslania danych
+	// Odczekuje jeden cykl
+	asm volatile("nop");
+
+	// Przesyla mlodszy polbajt
+	lcd_send_nibble((b & 0x0F) << 4);
+
+	_delay_us(50);
 }
 
-/** Przesyla polbajt */
+/** Przesyla starszy polbajt wskazanego bajtu */
 void lcd_send_nibble(uint8_t byte) {
+	// Aktywuje przesyl danych
 	LCD_PORT |=_BV(LCD_EN);
-	LCD_PORT = byte | (LCD_PORT & 0x0F); 
+
+	// Ustawia dane w porcie
+	LCD_PORT = byte | (LCD_PORT & 0x0F);
+
+	// Zatwierdza przesyl danych
 	LCD_PORT &=~(_BV(LCD_EN));
 }
 
+/** Konfiguruje Timer 0 */
 void timer_init() {
+	// Ustawia Timer 0 w tryb CTC
     TCCR0 |= (1 << WGM01) | (0 << WGM00);
+
+	// Ustawia preskaler 1/1024
     TCCR0 |= (1 << CS01) | (1 << CS00);
+
+	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
+    // Przerwanie ma wystepowac po 0.25 s
     OCR0 = F_CPU / 1024 * 0.25 - 1;
 
+	// Resetuje stan licznika
     TCNT0 = 0;
+
+	// Aktywuje przerwania Timera 0 w trybie CTC
     TIMSK |= (1 << OCIE0);
 
+	// Aktywuje obsluge przerwan
 	sei();
 }
 
