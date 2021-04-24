@@ -13,11 +13,13 @@
 #define LCD_DB6 6
 #define LCD_DB7 7
 
+// Komendy LCD
 #define LCD_HOME 0x02
 #define LCD_CLEAR 0x01
 #define LCD_CURSOR_RIGHT 0x14
 #define LCD_CURSOR_LEFT 0x10
 
+// Mapuje kod przycisku na opisujacy go lancuch
 static const char* keymap[] = {
 	0,
 	"1",
@@ -38,6 +40,7 @@ static const char* keymap[] = {
 	"Left"
 };
 
+// Definicja pierwszego znaku w animacji
 static const char sign_1[8] = {
 	0b00000,
 	0b00000,
@@ -49,6 +52,7 @@ static const char sign_1[8] = {
 	0b10001
 };
 
+// Definicja drugiego znaku w animacji
 static const char sign_2[8] = {
 	0b00000,
 	0b00000,
@@ -60,6 +64,7 @@ static const char sign_2[8] = {
 	0b00000
 };
 
+// Definicja trzeciego znaku w animacji
 static const char sign_3[8] = {
 	0b00100,
 	0b01010,
@@ -94,19 +99,32 @@ volatile uint8_t cursor_row = 0;
 
 // Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
 ISR(TIMER0_COMP_vect) {
+	// Odczytuje kod przycisku
     keycode = keypad_read();
 
-	if (keycode > 0) {			
+	// Sprawdza czy ktorykolwiek przycisk jest wcisniety
+	if (keycode > 0) {
+		// Przenosi kursor na poczatek drugiej linii
 		lcd_move_cursor(1, 0);
+
+		// Wypisuje opis przycisku na podstawie jego kodu
 		lcd_text(keymap[keycode]);
+
+		// Czysci wszystkie znaki nastepujace po wypisanym opisie przycisku
 		lcd_clear_from(strlen(keymap[keycode]));		
 	}
 }
 
 int main() {
+	// Inicjalizuje klawiature
 	keypad_init();
-	timer_init(0.4);
-	lcd_init();		//wlaczenie i skonfigurowanie wyswietlacza 
+
+	// Inicjalizuje timer
+	timer_init();
+
+	// Inicjalizuje LCD
+	lcd_init();
+
 	lcd_clear();
 
 	lcd_new_sign(sign_1, 0);
@@ -123,14 +141,20 @@ int main() {
 	}
 }
 
+/** Wyswietla nastepna w kolejnosci klatke animacji */
 void lcd_anim() {
+	// Inicjalizuje zmienna do przechowywania indeksu klatki
 	static uint8_t anim = 0;
 
+	// Przenosi kursor na poczatek pierwszej linii
+	lcd_move_cursor(0, 0);
+
+	// Wyswietla klatke animacji i przechodzi do nastepnej klatki
+	lcd_send(anim++);
+
+	// Zawija kolejnosc klatek
 	if (anim == 3)
 			anim = 0;
-
-	lcd_move_cursor(0, 0);
-	lcd_send(anim++);
 }
 
 /** Wypelnia LCD znakiem */
