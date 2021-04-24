@@ -38,15 +38,15 @@ static const char* keymap[] = {
 	"Left"
 };
 
-static const char sign_3[8] = {
+static const char sign_1[8] = {
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
 	0b00100,
 	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000
+	0b10001
 };
 
 static const char sign_2[8] = {
@@ -60,15 +60,15 @@ static const char sign_2[8] = {
 	0b00000
 };
 
-static const char sign_1[8] = {
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
+static const char sign_3[8] = {
 	0b00100,
 	0b01010,
-	0b10001
+	0b10001,
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000,
+	0b00000
 };
 
 void timer_init();
