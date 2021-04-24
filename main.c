@@ -150,8 +150,13 @@ void lcd_anim() {
 
 /** Wypelnia LCD znakiem */
 void lcd_fill(char c) {
+	// Iteruje po liniach
 	for (uint8_t row, col = 0; row <= 1; row++) {
+
+		// Ustawia kursor na poczatku linii
 		lcd_move_cursor(row, 0);
+
+		// Iteruje po kolumnach i wyswietla znak
 		for (col = 0; col <= 16; col++)
 			lcd_send(c);
 	}
@@ -159,10 +164,14 @@ void lcd_fill(char c) {
 
 /** Kasuje w biezacym wierszu od pozycji */
 void lcd_clear_from(uint8_t pos) {
+	// Przenosi kursor na poczatek biezacej linii
 	lcd_move_cursor(cursor_row, 0);
-	for (uint8_t i = 0; i < pos; i++)
-		lcd_cmd(LCD_CURSOR_RIGHT); // Przesuwa kursor w prawo o jedna pozycje
 
+	// Przesuwa kursor do wskazanej pozycji
+	for (uint8_t i = 0; i < pos; i++)
+		lcd_cmd(LCD_CURSOR_RIGHT);
+
+	// Czysci znaki od wskazanej pozycji
 	while (pos++ <= 16)
 		lcd_send(' ');
 }
