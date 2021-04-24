@@ -14,78 +14,12 @@
 #define LCD_DB7 7
 
 // Komendy LCD
-#define LCD_HOME 0x02
 #define LCD_CLEAR 0x01
 #define LCD_CURSOR_RIGHT 0x14
-#define LCD_CURSOR_LEFT 0x10
 
-// Mapuje kod przycisku na opisujacy go lancuch
-static const char* keymap[] = {
-	0,
-	"1",
-	"2",
-	"3",
-	"Up",
-	"4",
-	"5",
-	"6",
-	"Down",
-	"7",
-	"8",
-	"9",
-	"Right",
-	"Clear",
-	"0",
-	"Enter",
-	"Left"
-};
-
-// Definicja pierwszego znaku w animacji
-static const char sign_1[8] = {
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001
-};
-
-// Definicja drugiego znaku w animacji
-static const char sign_2[8] = {
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000
-};
-
-// Definicja trzeciego znaku w animacji
-static const char sign_3[8] = {
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000
-};
-
-void timer_init();
-
-uint8_t keypad_read();
-void keypad_init();
-
-void lcd_text(char *chars);
 void lcd_fill(char c);
 void lcd_clear_from(uint8_t pos);
 
-void lcd_new_sign(char* sign, uint8_t index);
 void lcd_clear();
 void lcd_init();
 void lcd_move_cursor(unsigned char w, unsigned char h);
@@ -93,61 +27,31 @@ void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
 
-// Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
-volatile uint8_t keycode = 0;
-
-// Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
-volatile uint8_t cursor_row = 0;
-
-// Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
-ISR(TIMER0_COMP_vect) {
-	// Odczytuje kod przycisku
-    keycode = keypad_read();
-
-	// Sprawdza czy ktorykolwiek przycisk jest wcisniety
-	if (keycode > 0) {
-		// Przenosi kursor na poczatek drugiej linii
-		lcd_move_cursor(1, 0);
-
-		// Wypisuje opis przycisku na podstawie jego kodu
-		lcd_text(keymap[keycode]);
-
-		// Czysci wszystkie znaki nastepujace po wypisanym opisie przycisku
-		lcd_clear_from(strlen(keymap[keycode]));		
-	}
-}
+// Inicjalizuje zmienna przechowujaca numer biezacego wiersza
+static uint8_t cursor_row = 0;
 
 int main() {
-	// Inicjalizuje klawiature
-	keypad_init();
-
-	// Inicjalizuje timer
-	timer_init();
-
 	// Inicjalizuje LCD
 	lcd_init();
 
-	lcd_clear();
+    while (1) {
+		// Wypelnia wyswietlacz znakiem 'a'
+		lcd_fill('a');
+		_delay_ms(400);
 
-	lcd_fill('a');
+		// Czysci wyswietlacz
+		lcd_clear();
+		_delay_ms(400);
 
-    while (1);
-}
+		// Wypisuje znak 'Y' w drugiej linii na trzeciej pozycji
+		lcd_move_cursor(1, 2);
+		lcd_send('Y');
+		_delay_ms(400);
 
-/** Wyswietla nastepna w kolejnosci klatke animacji */
-void lcd_anim() {
-	// Inicjalizuje zmienna do przechowywania indeksu klatki
-	static uint8_t anim = 0;
-
-	// Przenosi kursor na poczatek pierwszej linii
-	lcd_move_cursor(0, 0);
-
-	// Wyswietla klatke animacji i przechodzi do nastepnej klatki
-	lcd_send(anim++);
-
-	// Zawija kolejnosc klatek
-	if (anim == 3)
-			anim = 0;
+		// Kasuje znaki w biezacym wierszu od pozycji 2
+		lcd_clear_from(2);
+		_delay_ms(400);
+	}
 }
 
 /** Wypelnia LCD znakiem */
@@ -176,30 +80,6 @@ void lcd_clear_from(uint8_t pos) {
 	// Czysci znaki od wskazanej pozycji
 	while (pos++ <= 16)
 		lcd_send(' ');
-}
-
-/** Wypisuje tekst */
-void lcd_text(char *chars) {
-	// Iteruje po znakach we wskazanym lancuchu
-	for (uint8_t i = 0; chars[i]; i++) {
-
-		// Jezeli brakuje miejsca w linii, przechodzi do nastepnej
-		if (i==16)
-			lcd_move_cursor(1,0);
-
-		// Wypisuje znak
-		lcd_send(chars[i]);
-	}
-}
-
-/** Rejestruje nowy znak w pamieci LCD */
-void lcd_new_sign(char* sign, uint8_t index) {
-	// Przenosi kursor do miejsca przeznaczonego na zapis znaku
-	lcd_cmd(0x40 + index * 8);
-
-	// Przesyla wszystkie bajty znaku we wskazane mejsce
-	for (uint8_t i = 0; i < 8; i++)
-		lcd_send(sign[i]);
 }
 
 /** Inicializuje LCD */
@@ -304,26 +184,4 @@ void timer_init() {
 
 	// Aktywuje obsluge przerwan
 	sei();
-}
-
-/** Inicjalizuje klawiature */
-void keypad_init() {
-	DDRA = 0xf0;
-}
-
-
-/** Zwraca kod wcisnietego przycisku,
-    lub 0 jesli zaden przycisk nie jest wcisniety **/
-uint8_t keypad_read() {
-    uint8_t col_state;
-
-    for (uint8_t col = 0; col <= 3; col++) {
-        PORTA = ~(1 << (col + 4));
-        col_state = PINA & 0x0f;
-        if (col_state < 0x0f)
-            return __builtin_ctz(~col_state) * 4 + col + 1;
-
-    }
-
-    return 0;
 }
