@@ -82,7 +82,6 @@ uint8_t keypad_read();
 void keypad_init();
 
 void lcd_text(char *chars);
-void lcd_number(uint8_t num);
 void lcd_fill(char c);
 void lcd_clear_from(uint8_t pos);
 
@@ -174,20 +173,6 @@ void lcd_clear_from(uint8_t pos) {
 	// Czysci znaki od wskazanej pozycji
 	while (pos++ <= 16)
 		lcd_send(' ');
-}
-
-/** Wypisuje liczbe z zakresu 0-19 */
-void lcd_number(uint8_t num) {
-	if (num == 0)
-		return;
-
-	if (num > 9) {
-		lcd_send(num / 10 + '0');
-		lcd_send(num % 10 + '0');
-	} else {
-		lcd_send(num + '0');
-		lcd_send(' ');
-	}
 }
 
 /** Wypisuje tekst */
