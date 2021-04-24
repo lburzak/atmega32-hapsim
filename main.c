@@ -127,18 +127,9 @@ int main() {
 
 	lcd_clear();
 
-	lcd_new_sign(sign_1, 0);
-	lcd_new_sign(sign_2, 1);
-	lcd_new_sign(sign_3, 2);
+	lcd_fill('a');
 
-	lcd_move_cursor(0, 0);
-	lcd_text("Burzak L.");
-
-    while (1) {
-		lcd_anim();
-
-		_delay_ms(400);
-	}
+    while (1);
 }
 
 /** Wyswietla nastepna w kolejnosci klatke animacji */
@@ -159,16 +150,11 @@ void lcd_anim() {
 
 /** Wypelnia LCD znakiem */
 void lcd_fill(char c) {
-	int8_t i = 0;
-	lcd_move_cursor(0,0);
-
-	for (uint8_t i = 0; i <= 16; i++)
-		lcd_send(c);
-
-	lcd_move_cursor(1,0);
-
-	for (uint8_t i = 0; i <= 16; i++)
-		lcd_send(c);
+	for (uint8_t row, col = 0; row <= 1; row++) {
+		lcd_move_cursor(row, 0);
+		for (col = 0; col <= 16; col++)
+			lcd_send(c);
+	}
 }
 
 /** Kasuje w biezacym wierszu od pozycji */
