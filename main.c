@@ -317,13 +317,29 @@ void keypad_init() {
 uint8_t keypad_read() {
     uint8_t col_state;
 
+	// Petla iteruje po indeksach kolumn
     for (uint8_t col = 0; col <= 3; col++) {
+		// Ustawia kalwiature w sposob umozliwajacy odczyt danej kolumny:
+		// Bity odpowiadajace kolumnom zaczynaja sie od bitu czwartego
         PORTA = ~(1 << (col + 4));
+
+		// Odczytuje stan kolumny, uwzgledniajac jedynie istotne bity
         col_state = PINA & 0x0f;
+
+		// Sprawdza, czy w kolumnie jest wcisniety przycisk
         if (col_state < 0x0f)
+			/*
+			Zwraca kod przycisku
+		 		- Funkcja `__builtin_ctz` (count trailing zeros) zwraca liczbe zer z prawej strony najmlodszego ustawionego bitu
+				- Wyrazenie `__builtin_ctz(~col_state) * 4` odpowiada za przejscie do odpowiedniego wiersza
+				- Wyrazenie `+ col` odpowiada za przejscie do odpowiedniego przycisku w wierszu
+				- Wyrazenie `+ 1` ustawia kod pierwszego przycisku na `1`,
+				  bo `0` jest zarezerwowane na brak wcisnietego przycisku
+			*/
             return __builtin_ctz(~col_state) * 4 + col + 1;
 
     }
 
+	// Zaden wcisniety przycisk nie zostal wykryty w petli
     return 0;
 }
