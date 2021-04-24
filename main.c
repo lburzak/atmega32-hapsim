@@ -14,10 +14,8 @@
 #define LCD_DB7 7
 
 // Komendy LCD
-#define LCD_HOME 0x02
 #define LCD_CLEAR 0x01
 #define LCD_CURSOR_RIGHT 0x14
-#define LCD_CURSOR_LEFT 0x10
 
 // Mapuje kod przycisku na opisujacy go lancuch
 static const char* keymap[] = {
@@ -40,42 +38,6 @@ static const char* keymap[] = {
 	"Left"
 };
 
-// Definicja pierwszego znaku w animacji
-static const char sign_1[8] = {
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001
-};
-
-// Definicja drugiego znaku w animacji
-static const char sign_2[8] = {
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000
-};
-
-// Definicja trzeciego znaku w animacji
-static const char sign_3[8] = {
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000
-};
-
 void timer_init();
 
 uint8_t keypad_read();
@@ -85,7 +47,6 @@ void lcd_text(char *chars);
 void lcd_fill(char c);
 void lcd_clear_from(uint8_t pos);
 
-void lcd_new_sign(char* sign, uint8_t index);
 void lcd_clear();
 void lcd_init();
 void lcd_move_cursor(unsigned char w, unsigned char h);
@@ -126,28 +87,14 @@ int main() {
 
 	// Inicjalizuje LCD
 	lcd_init();
-
-	lcd_clear();
-
-	lcd_fill('a');
-
-    while (1);
-}
-
-/** Wyswietla nastepna w kolejnosci klatke animacji */
-void lcd_anim() {
-	// Inicjalizuje zmienna do przechowywania indeksu klatki
-	static uint8_t anim = 0;
-
+	
 	// Przenosi kursor na poczatek pierwszej linii
 	lcd_move_cursor(0, 0);
 
-	// Wyswietla klatke animacji i przechodzi do nastepnej klatki
-	lcd_send(anim++);
+	// Wypisuje dane osobowe
+	lcd_text("Burzak L.");
 
-	// Zawija kolejnosc klatek
-	if (anim == 3)
-			anim = 0;
+    while (1);
 }
 
 /** Wypelnia LCD znakiem */
@@ -190,16 +137,6 @@ void lcd_text(char *chars) {
 		// Wypisuje znak
 		lcd_send(chars[i]);
 	}
-}
-
-/** Rejestruje nowy znak w pamieci LCD */
-void lcd_new_sign(char* sign, uint8_t index) {
-	// Przenosi kursor do miejsca przeznaczonego na zapis znaku
-	lcd_cmd(0x40 + index * 8);
-
-	// Przesyla wszystkie bajty znaku we wskazane mejsce
-	for (uint8_t i = 0; i < 8; i++)
-		lcd_send(sign[i]);
 }
 
 /** Inicializuje LCD */
