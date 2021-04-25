@@ -19,6 +19,40 @@
 #define LCD_CURSOR_RIGHT 0x14
 #define LCD_CURSOR_LEFT 0x10
 
+void timer_init();
+
+uint8_t keypad_read();
+void keypad_init();
+
+void lcd_text(char *chars);
+void lcd_fill(char c);
+void lcd_clear_from(uint8_t pos);
+
+void lcd_new_sign(char* sign, uint8_t index);
+void lcd_clear();
+void lcd_init();
+void lcd_move_cursor(unsigned char w, unsigned char h);
+void lcd_cmd(uint8_t byte);
+void lcd_send(uint8_t byte);
+void lcd_send_nibble(uint8_t byte);
+
+typedef struct Route {
+	uint8_t destination;
+	char* label;
+} Route;
+
+struct Menu {
+	uint8_t current_option;
+	uint8_t length;
+	Route routes[];
+};
+
+void menu_render();
+void menu_down();
+void menu_up();
+struct Menu* menu_get_dest();
+void menu_navigate(struct Menu* dest);
+
 // Mapuje kod przycisku na opisujacy go lancuch
 static const char* keymap[] = {
 	0,
@@ -52,96 +86,58 @@ static const char menu_cursor_sign[8] = {
 	0b00000
 };
 
-void timer_init();
 
-uint8_t keypad_read();
-void keypad_init();
-
-void lcd_text(char *chars);
-void lcd_fill(char c);
-void lcd_clear_from(uint8_t pos);
-
-void lcd_new_sign(char* sign, uint8_t index);
-void lcd_clear();
-void lcd_init();
-void lcd_move_cursor(unsigned char w, unsigned char h);
-void lcd_cmd(uint8_t byte);
-void lcd_send(uint8_t byte);
-void lcd_send_nibble(uint8_t byte);
-
-void menu_render();
-void menu_down();
-void menu_up();
-
-struct Menu {
-	uint8_t current_option : 2;
-	char* options[];
+static const struct Menu menu_1 = {
+	.current_option = 0,
+	.length = 2,
+	.routes = {
+		{0, "Program 1.1"},
+		{0, "Program 1.2"},
+	},
 };
+
+static const struct Menu menu_2 = {
+	.current_option = 0,
+	.length = 2,
+	.routes = {
+		{0, "Program 2.1"},
+		{0, "Program 2.2"},
+	},
+};
+
+static const struct Menu menu_3 = {
+	.current_option = 0,
+	.length = 2,
+	.routes = {
+		{0, "Program 3.1"},
+		{1, "Menu 1"},
+	},
+};
+
+static const struct Menu main_menu = {
+	.current_option = 0,
+	.length = 3,
+	.routes = {
+		{1, "Menu 1"},
+		{2, "Menu 2"},
+		{3, "Menu 3"},
+	},
+};
+
+static const struct Menu* nav_graph[4] = {
+	&main_menu,
+	&menu_1,
+	&menu_2,
+	&menu_3
+};
+
+static struct Menu* current_menu;
 
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
 
 // Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
 volatile uint8_t cursor_row = 0;
-
-static struct Menu menu_1 = {
-	.current_option = 0,
-	.options = { "Program 1.1", "Program 1.2", 0 },
-};
-
-static struct Menu menu_2 = {
-	.current_option = 0,
-	.options = { "Program 2.1", "Program 2.2", 0 },
-};
-
-static struct Menu menu_3 = {
-	.current_option = 0,
-	.options = { "Program 3.1", "Menu 1", 0 },
-};
-
-static struct Menu main_menu = {
-	.current_option = 0,
-	.options = { "Menu 1", "Menu 2", "Menu 3", 0 },
-};
-
-static struct Menu* current_menu = &main_menu;
-
-void menu_render() {
-	uint8_t first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
-
-	for (uint8_t row = 0; row <= 1; row++) {
-		if (current_menu->options[row + first_option] == 0)
-			break;
-
-		lcd_move_cursor(row, 0);
-
-		if (row == current_menu->current_option - first_option)
-			lcd_send(0);
-		else
-			lcd_send(' ');
-
-		lcd_text(current_menu->options[row + first_option]);
-	}
-}
-
-void menu_down() {
-	if (current_menu->options[current_menu->current_option + 1] != 0)
-		current_menu->current_option++;
-
-	menu_render();
-}
-
-void menu_up() {
-	if (current_menu->current_option > 0)
-		current_menu->current_option--;
-
-	menu_render();
-}
-
-void menu_navigate(struct Menu* target_menu) {
-	current_menu = target_menu;
-	menu_render();
-}
 
 // Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
 ISR(TIMER0_COMP_vect) {
@@ -153,7 +149,8 @@ ISR(TIMER0_COMP_vect) {
 		switch (keycode) {
 			case 4: menu_up(); break;
 			case 8: menu_down(); break;
-			case 15: menu_navigate(&menu_1);
+			case 13: menu_navigate(&main_menu); break;
+			case 15: menu_navigate(menu_get_dest()); break;
 		}
 	}
 }
@@ -170,10 +167,53 @@ int main() {
 
 	lcd_new_sign(menu_cursor_sign, 0);
 
-	current_menu->current_option = 0;
-	menu_render();
+	menu_navigate(&main_menu);
 
     while (1);
+}
+
+void menu_render() {
+	uint8_t first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
+
+	lcd_clear();
+
+	for (uint8_t row = 0; row <= 1; row++) {
+		if (current_menu->length < row + first_option)
+			break;
+
+		lcd_move_cursor(row, 0);
+
+		if (row == current_menu->current_option - first_option)
+			lcd_send(0);
+		else
+			lcd_send(' ');
+
+		lcd_text(current_menu->routes[row + first_option].label);
+	}
+}
+
+void menu_down() {
+	if (current_menu->current_option < current_menu->length - 1)
+		current_menu->current_option++;
+
+	menu_render();
+}
+
+void menu_up() {
+	if (current_menu->current_option > 0)
+		current_menu->current_option--;
+
+	menu_render();
+}
+
+struct Menu* menu_get_dest() {
+	return nav_graph[current_menu->routes[current_menu->current_option].destination];
+}
+
+void menu_navigate(struct Menu* dest) {
+	current_menu = dest;
+	
+	menu_render();
 }
 
 /** Wyswietla nastepna w kolejnosci klatke animacji */
