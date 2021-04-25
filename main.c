@@ -41,38 +41,14 @@ static const char* keymap[] = {
 };
 
 // Definicja pierwszego znaku w animacji
-static const char sign_1[8] = {
+static const char menu_cursor_sign[8] = {
 	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001
-};
-
-// Definicja drugiego znaku w animacji
-static const char sign_2[8] = {
-	0b00000,
-	0b00000,
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000
-};
-
-// Definicja trzeciego znaku w animacji
-static const char sign_3[8] = {
-	0b00100,
-	0b01010,
-	0b10001,
-	0b00000,
-	0b00000,
-	0b00000,
-	0b00000,
+	0b11000,
+	0b11100,
+	0b11110,
+	0b11110,
+	0b11100,
+	0b11000,
 	0b00000
 };
 
@@ -93,11 +69,79 @@ void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
 
+void menu_render();
+void menu_down();
+void menu_up();
+
+struct Menu {
+	uint8_t current_option : 2;
+	char* options[];
+};
+
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
 
 // Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
 volatile uint8_t cursor_row = 0;
+
+static struct Menu menu_1 = {
+	.current_option = 0,
+	.options = { "Program 1.1", "Program 1.2", 0 },
+};
+
+static struct Menu menu_2 = {
+	.current_option = 0,
+	.options = { "Program 2.1", "Program 2.2", 0 },
+};
+
+static struct Menu menu_3 = {
+	.current_option = 0,
+	.options = { "Program 3.1", "Menu 1", 0 },
+};
+
+static struct Menu main_menu = {
+	.current_option = 0,
+	.options = { "Menu 1", "Menu 2", "Menu 3", 0 },
+};
+
+static struct Menu* current_menu = &main_menu;
+
+void menu_render() {
+	uint8_t first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
+
+	for (uint8_t row = 0; row <= 1; row++) {
+		if (current_menu->options[row + first_option] == 0)
+			break;
+
+		lcd_move_cursor(row, 0);
+
+		if (row == current_menu->current_option - first_option)
+			lcd_send(0);
+		else
+			lcd_send(' ');
+
+		lcd_text(current_menu->options[row + first_option]);
+	}
+}
+
+void menu_down() {
+	if (current_menu->options[current_menu->current_option + 1] != 0)
+		current_menu->current_option++;
+
+	menu_render();
+}
+
+void menu_up() {
+	if (current_menu->current_option > 0)
+		current_menu->current_option--;
+
+	menu_render();
+}
+
+void menu_navigate(struct Menu* target_menu) {
+	current_menu = target_menu;
+	menu_render();
+}
 
 // Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
 ISR(TIMER0_COMP_vect) {
@@ -106,14 +150,11 @@ ISR(TIMER0_COMP_vect) {
 
 	// Sprawdza czy ktorykolwiek przycisk jest wcisniety
 	if (keycode > 0) {
-		// Przenosi kursor na poczatek drugiej linii
-		lcd_move_cursor(1, 0);
-
-		// Wypisuje opis przycisku na podstawie jego kodu
-		lcd_text(keymap[keycode]);
-
-		// Czysci wszystkie znaki nastepujace po wypisanym opisie przycisku
-		lcd_clear_from(strlen(keymap[keycode]));		
+		switch (keycode) {
+			case 4: menu_up(); break;
+			case 8: menu_down(); break;
+			case 15: menu_navigate(&menu_1);
+		}
 	}
 }
 
@@ -127,9 +168,10 @@ int main() {
 	// Inicjalizuje LCD
 	lcd_init();
 
-	lcd_clear();
+	lcd_new_sign(menu_cursor_sign, 0);
 
-	lcd_fill('a');
+	current_menu->current_option = 0;
+	menu_render();
 
     while (1);
 }
@@ -290,11 +332,11 @@ void timer_init() {
     TCCR0 |= (1 << WGM01) | (0 << WGM00);
 
 	// Ustawia preskaler 1/1024
-    TCCR0 |= (1 << CS01) | (1 << CS00);
+    TCCR0 |= (1 << CS02) | (1 << CS00);
 
 	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
     // Przerwanie ma wystepowac po 0.25 s
-    OCR0 = F_CPU / 1024 * 0.25 - 1;
+    OCR0 = F_CPU / 1024 * 0.05 - 1;
 
 	// Resetuje stan licznika
     TCNT0 = 0;
