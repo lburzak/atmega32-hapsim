@@ -41,7 +41,7 @@ struct Menu {
 	uint8_t length;
 	struct Route {
 		struct Menu* destination;
-		char* label;
+		char label[16];
 	} routes[];
 };
 
@@ -208,6 +208,7 @@ struct Menu* menu_get_dest() {
 void menu_navigate(struct Menu* dest) {
 	if (dest != NULL) {
 		current_menu = dest;
+		current_menu->current_option = 0;
 		menu_render();
 	}
 }
@@ -260,7 +261,6 @@ void lcd_clear_from(uint8_t pos) {
 void lcd_text(char *chars) {
 	// Iteruje po znakach we wskazanym lancuchu
 	for (uint8_t i = 0; chars[i]; i++) {
-
 		// Jezeli brakuje miejsca w linii, przechodzi do nastepnej
 		if (i==16)
 			lcd_move_cursor(1,0);
