@@ -19,6 +19,11 @@
 #define LCD_CURSOR_RIGHT 0x14
 #define LCD_CURSOR_LEFT 0x10
 
+#define KEY_ENTER 15
+#define KEY_CLEAR 13
+#define KEY_UP 4
+#define KEY_DOWN 8
+
 void timer_init();
 
 uint8_t keypad_read();
@@ -137,10 +142,10 @@ ISR(TIMER0_COMP_vect) {
 		key_pressed = 1;
 
 		switch (keycode) {
-			case 4: menu_up(); break;
-			case 8: menu_down(); break;
-			case 13: menu_navigate(&main_menu); break;
-			case 15: menu_navigate(menu_get_dest()); break;
+			case KEY_UP: menu_up(); break;
+			case KEY_DOWN: menu_down(); break;
+			case KEY_CLEAR: menu_navigate(&main_menu); break;
+			case KEY_ENTER: menu_navigate(menu_get_dest()); break;
 		}
 	} else if (keycode == 0 && key_pressed) {
 		key_pressed = 0;
