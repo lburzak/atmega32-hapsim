@@ -19,6 +19,7 @@
 #define LCD_CURSOR_RIGHT 0x14
 #define LCD_CURSOR_LEFT 0x10
 
+// Kody przyciskow
 #define KEY_UP 4
 #define KEY_DOWN 8
 #define KEY_ENTER 16
@@ -41,11 +42,20 @@ void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
 
+// Struktura okreslajaca pojedyncze menu
 struct Menu {
+	// Przechowuje index aktualnej linii w menu
 	uint8_t current_option;
+
+	// Przechowuje ilosc linii w menu
 	uint8_t length;
+
+	// Przechowuje opcje menu
 	struct Route {
+		// Przechowuje menu docelowe opcji
 		struct Menu* destination;
+
+		// Przechowuje opis opcji
 		char label[16];
 	} routes[];
 };
@@ -89,6 +99,7 @@ static const char menu_cursor_sign[8] = {
 	0b00000
 };
 
+// Definicje posczegolnych menu
 static const struct Menu menu_1 = {
 	.length = 2,
 	.routes = {
@@ -122,11 +133,13 @@ static const struct Menu main_menu = {
 	},
 };
 
+// Inicjalizuje zmienna przechowujaca 
 static struct Menu* current_menu;
 
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
 
+// Inicjalizuje zmienna przechowujaca stan wcisniecia przycisku
 volatile uint8_t key_pressed = 0;
 
 // Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
@@ -137,8 +150,9 @@ ISR(TIMER0_COMP_vect) {
 	// Odczytuje kod przycisku
     keycode = keypad_read();
 
-	// Sprawdza czy ktorykolwiek przycisk jest wcisniety
+	// Sprawdza czy ktorykolwiek przycisk jest wcisniety i czy przycisk nie jest trzymany
 	if (keycode > 0 && !key_pressed) {
+		// Okresla stan przycisku jako przytrzymany
 		key_pressed = 1;
 
 		switch (keycode) {
@@ -148,6 +162,9 @@ ISR(TIMER0_COMP_vect) {
 			case KEY_ENTER: menu_navigate(menu_get_dest()); break;
 		}
 	} else if (keycode == 0 && key_pressed) {
+		// Jezeli zaden przycisk nie jest wcisniety
+		// i jakis przycisk jest okreslony jako przytrzymany
+		// mozna uznac ze przycisk zostal puszczony
 		key_pressed = 0;
 	}
 }
@@ -162,58 +179,83 @@ int main() {
 	// Inicjalizuje LCD
 	lcd_init();
 
+	// Tworzy znak kursora menu
 	lcd_new_sign(menu_cursor_sign, 0);
 
+	// Przechodzi do menu glownego
 	menu_navigate(&main_menu);
 
     while (1);
 }
 
+// Przechowuje indeks opcji menu, ktora jest wyswietlona
+// w pierwszej linii LCD
 static uint8_t first_option = 0;
 
+/** Wyswietla obecne menu na LCD */
 void menu_render() {
 	lcd_clear();
 
+	// Jezeli zostala wybrana opcja, ktora nie jest obecnie widoczna na LCD,
+	// zmienia indeks linii ktora powinna byc wyswietlona jako pierwsza
 	if (first_option > current_menu->current_option || first_option + 1 < current_menu->current_option)
 		first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
 
+	// Iteruje po liniach LCD
 	for (uint8_t row = 0; row <= 1; row++) {
+
+		// Jesli potrzebne pozycje sa juz widoczne, konczy algorytm
 		if (current_menu->length < row + first_option)
 			break;
 
+		// Przenosi kursor na poczatek linii
 		lcd_move_cursor(row, 0);
 
+		// Jesli pozycja jest obecnie wybrana, ustawia znak kursora na poczatku linii
 		if (row == current_menu->current_option - first_option)
 			lcd_send(0);
 		else
 			lcd_send(' ');
 
+		// Wypisuje opis pozycji
 		lcd_text(current_menu->routes[row + first_option].label);
 	}
 }
 
+/** Przenosi kursor menu nizej */
 void menu_down() {
+	// Jezeli wybrana pozycja nie jest ostatnia, wybiera linie ponizej
 	if (current_menu->current_option < current_menu->length - 1) {
 		current_menu->current_option++;
 		menu_render();
 	}
 }
 
+/** Przenosi kursor menu wyzej */
 void menu_up() {
+	// Jezeli wybrana pozycja nie jest pierwsza, wybiera linie powyzej
 	if (current_menu->current_option > 0) {
 		current_menu->current_option--;
 		menu_render();
 	}
 }
 
+/** Zwraca menu docelowe obecnie wybranej pozycji */
 struct Menu* menu_get_dest() {
 	return current_menu->routes[current_menu->current_option].destination;
 }
 
+/** Przechodzi do okreslonego menu */
 void menu_navigate(struct Menu* dest) {
+	// Sprawdza czy okreslone menu jest zdefiniowane
 	if (dest != NULL) {
+		// Podmienia obecne menu na okreslone w parametrze
 		current_menu = dest;
+
+		// Ustawia kursor menu na pierwszej pozycji
 		current_menu->current_option = 0;
+
+		// Wyswietla nowe menu
 		menu_render();
 	}
 }
