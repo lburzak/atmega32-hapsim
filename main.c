@@ -164,10 +164,13 @@ int main() {
     while (1);
 }
 
-void menu_render() {
-	uint8_t first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
+static uint8_t first_option = 0;
 
+void menu_render() {
 	lcd_clear();
+
+	if (first_option > current_menu->current_option || first_option + 1 < current_menu->current_option)
+		first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
 
 	for (uint8_t row = 0; row <= 1; row++) {
 		if (current_menu->length < row + first_option)
