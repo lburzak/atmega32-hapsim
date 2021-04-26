@@ -36,15 +36,13 @@ void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
 
-typedef struct Route {
-	uint8_t destination;
-	char* label;
-} Route;
-
 struct Menu {
 	uint8_t current_option;
 	uint8_t length;
-	Route routes[];
+	struct Route {
+		struct Menu* destination;
+		char* label;
+	} routes[];
 };
 
 void menu_render();
@@ -86,45 +84,37 @@ static const char menu_cursor_sign[8] = {
 	0b00000
 };
 
-
 static const struct Menu menu_1 = {
 	.length = 2,
 	.routes = {
-		{0, "Program 1.1"},
-		{0, "Program 1.2"},
+		{NULL, "Program 1.1"},
+		{NULL, "Program 1.2"},
 	},
 };
 
 static const struct Menu menu_2 = {
 	.length = 2,
 	.routes = {
-		{0, "Program 2.1"},
-		{0, "Program 2.2"},
+		{NULL, "Program 2.1"},
+		{NULL, "Program 2.2"},
 	},
 };
 
 static const struct Menu menu_3 = {
 	.length = 2,
 	.routes = {
-		{0, "Program 3.1"},
-		{1, "Menu 1"},
+		{NULL, "Program 3.1"},
+		{&menu_1, "Menu 1"},
 	},
 };
 
 static const struct Menu main_menu = {
 	.length = 3,
 	.routes = {
-		{1, "Menu 1"},
-		{2, "Menu 2"},
-		{3, "Menu 3"},
+		{&menu_1, "Menu 1"},
+		{&menu_2, "Menu 2"},
+		{&menu_3, "Menu 3"},
 	},
-};
-
-static const struct Menu* nav_graph[4] = {
-	&main_menu,
-	&menu_1,
-	&menu_2,
-	&menu_3
 };
 
 static struct Menu* current_menu;
@@ -209,7 +199,7 @@ void menu_up() {
 }
 
 struct Menu* menu_get_dest() {
-	return nav_graph[current_menu->routes[current_menu->current_option].destination];
+	return current_menu->routes[current_menu->current_option].destination;
 }
 
 void menu_navigate(struct Menu* dest) {
