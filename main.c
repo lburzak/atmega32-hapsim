@@ -206,9 +206,10 @@ struct Menu* menu_get_dest() {
 }
 
 void menu_navigate(struct Menu* dest) {
-	current_menu = dest;
-	
-	menu_render();
+	if (dest != NULL) {
+		current_menu = dest;
+		menu_render();
+	}
 }
 
 /** Wyswietla nastepna w kolejnosci klatke animacji */
