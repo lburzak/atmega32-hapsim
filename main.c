@@ -132,6 +132,8 @@ static struct Menu* current_menu;
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
 
+volatile uint8_t key_pressed = 0;
+
 // Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
 volatile uint8_t cursor_row = 0;
 
@@ -141,13 +143,17 @@ ISR(TIMER0_COMP_vect) {
     keycode = keypad_read();
 
 	// Sprawdza czy ktorykolwiek przycisk jest wcisniety
-	if (keycode > 0) {
+	if (keycode > 0 && !key_pressed) {
+		key_pressed = 1;
+
 		switch (keycode) {
 			case 4: menu_up(); break;
 			case 8: menu_down(); break;
 			case 13: menu_navigate(&main_menu); break;
 			case 15: menu_navigate(menu_get_dest()); break;
 		}
+	} else if (keycode == 0 && key_pressed) {
+		key_pressed = 0;
 	}
 }
 
