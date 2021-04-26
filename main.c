@@ -195,17 +195,17 @@ void menu_render() {
 }
 
 void menu_down() {
-	if (current_menu->current_option < current_menu->length - 1)
+	if (current_menu->current_option < current_menu->length - 1) {
 		current_menu->current_option++;
-
-	menu_render();
+		menu_render();
+	}
 }
 
 void menu_up() {
-	if (current_menu->current_option > 0)
+	if (current_menu->current_option > 0) {
 		current_menu->current_option--;
-
-	menu_render();
+		menu_render();
+	}
 }
 
 struct Menu* menu_get_dest() {
@@ -377,7 +377,7 @@ void timer_init() {
     TCCR0 |= (1 << CS02) | (1 << CS00);
 
 	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
-    // Przerwanie ma wystepowac po 0.25 s
+    // Przerwanie ma wystepowac po 0.05 s
     OCR0 = F_CPU / 1024 * 0.05 - 1;
 
 	// Resetuje stan licznika
