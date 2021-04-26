@@ -367,12 +367,12 @@ void timer_init() {
 	// Ustawia Timer 0 w tryb CTC
     TCCR0 |= (1 << WGM01) | (0 << WGM00);
 
-	// Ustawia preskaler 1/1024
-    TCCR0 |= (1 << CS02) | (1 << CS00);
+	// Ustawia preskaler 1/64
+    TCCR0 |= (1 << CS01) | (1 << CS00);
 
 	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
-    // Przerwanie ma wystepowac po 0.05 s
-    OCR0 = F_CPU / 1024 * 0.05 - 1;
+    // Przerwanie ma wystepowac po 0.001 s
+    OCR0 = F_CPU / 64 * 0.001 - 1;
 
 	// Resetuje stan licznika
     TCNT0 = 0;
