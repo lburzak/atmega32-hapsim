@@ -19,10 +19,10 @@
 #define LCD_CURSOR_RIGHT 0x14
 #define LCD_CURSOR_LEFT 0x10
 
-#define KEY_ENTER 15
-#define KEY_CLEAR 13
 #define KEY_UP 4
 #define KEY_DOWN 8
+#define KEY_ENTER 16
+#define KEY_CLEAR 12
 
 void timer_init();
 
