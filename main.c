@@ -88,7 +88,6 @@ static const char menu_cursor_sign[8] = {
 
 
 static const struct Menu menu_1 = {
-	.current_option = 0,
 	.length = 2,
 	.routes = {
 		{0, "Program 1.1"},
@@ -97,7 +96,6 @@ static const struct Menu menu_1 = {
 };
 
 static const struct Menu menu_2 = {
-	.current_option = 0,
 	.length = 2,
 	.routes = {
 		{0, "Program 2.1"},
@@ -106,7 +104,6 @@ static const struct Menu menu_2 = {
 };
 
 static const struct Menu menu_3 = {
-	.current_option = 0,
 	.length = 2,
 	.routes = {
 		{0, "Program 3.1"},
@@ -115,7 +112,6 @@ static const struct Menu menu_3 = {
 };
 
 static const struct Menu main_menu = {
-	.current_option = 0,
 	.length = 3,
 	.routes = {
 		{1, "Menu 1"},
