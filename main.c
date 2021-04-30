@@ -33,7 +33,6 @@ void keypad_init();
 void lcd_text(char *chars);
 
 void lcd_new_sign(char* sign, uint8_t index);
-void lcd_clear();
 void lcd_init();
 void lcd_move_cursor(unsigned char w, unsigned char h);
 void lcd_cmd(uint8_t byte);
@@ -171,7 +170,7 @@ static uint8_t first_option = 0;
 
 /** Wyswietla obecne menu na LCD */
 void menu_render() {
-	lcd_clear();
+	lcd_cmd(LCD_CLEAR);
 
 	// Jezeli zostala wybrana opcja, ktora nie jest obecnie widoczna na LCD,
 	// zmienia indeks linii ktora powinna byc wyswietlona jako pierwsza
@@ -301,11 +300,6 @@ void lcd_init() {
 	lcd_cmd(0b00001100);
 	
 	// Czysci LCD
-	lcd_clear();
-}
-
-/** Przesyla komende wyczyszczenia LCD */
-void lcd_clear() {
 	lcd_cmd(LCD_CLEAR);
 }
 
