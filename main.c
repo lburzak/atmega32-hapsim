@@ -31,7 +31,6 @@ uint8_t keypad_read();
 void keypad_init();
 
 void lcd_text(char *chars);
-void lcd_clear_from(uint8_t pos);
 
 void lcd_new_sign(char* sign, uint8_t index);
 void lcd_clear();
@@ -252,20 +251,6 @@ void lcd_anim() {
 	// Zawija kolejnosc klatek
 	if (anim == 3)
 			anim = 0;
-}
-
-/** Kasuje w biezacym wierszu od pozycji */
-void lcd_clear_from(uint8_t pos) {
-	// Przenosi kursor na poczatek biezacej linii
-	lcd_move_cursor(cursor_row, 0);
-
-	// Przesuwa kursor do wskazanej pozycji
-	for (uint8_t i = 0; i < pos; i++)
-		lcd_cmd(LCD_CURSOR_RIGHT);
-
-	// Czysci znaki od wskazanej pozycji
-	while (pos++ <= 16)
-		lcd_send(' ');
 }
 
 /** Wypisuje tekst */
