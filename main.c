@@ -164,15 +164,16 @@ int main() {
     while (1);
 }
 
-// Przechowuje indeks opcji menu, ktora jest wyswietlona
+// Przechowuje indeks pozycji menu, ktora jest wyswietlona
 // w pierwszej linii LCD
 static uint8_t first_option = 0;
 
 /** Wyswietla obecne menu na LCD */
 void menu_render() {
+	// Czysci ekran
 	lcd_cmd(LCD_CLEAR);
 
-	// Jezeli zostala wybrana opcja, ktora nie jest obecnie widoczna na LCD,
+	// Jezeli zostala wybrana pozycja, ktora nie jest obecnie widoczna na LCD,
 	// zmienia indeks linii ktora powinna byc wyswietlona jako pierwsza
 	if (first_option > current_menu->current_option || first_option + 1 < current_menu->current_option)
 		first_option = current_menu->current_option == 0 ? 0 : current_menu->current_option - 1;
