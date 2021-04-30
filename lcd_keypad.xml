@@ -3,10 +3,10 @@
    <General>
       <Build>2005</Build>
       <Position>
-         <top>117</top>
-         <bottom>529</bottom>
-         <left>790</left>
-         <right>1448</right>
+         <top>132</top>
+         <bottom>544</bottom>
+         <left>939</left>
+         <right>1264</right>
       </Position>
       <StayOnTop>1</StayOnTop>
       <Target>ATmega32</Target>
@@ -15,8 +15,8 @@
       <LCD>
          <Name>LCD1</Name>
          <Position>
-            <top>62</top>
-            <left>10</left>
+            <top>4294967287</top>
+            <left>4294967290</left>
          </Position>
          <DisplayConfig>
             <columns>16</columns>
@@ -48,8 +48,8 @@
       <Keypad>
          <Name>Keypad1</Name>
          <Position>
-            <top>9</top>
-            <left>295</left>
+            <top>55</top>
+            <left>4294967290</left>
          </Position>
          <PortMapping>
             <Strobe index="0">
