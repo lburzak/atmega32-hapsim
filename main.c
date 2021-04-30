@@ -66,27 +66,6 @@ void menu_up();
 struct Menu* menu_get_dest();
 void menu_navigate(struct Menu* dest);
 
-// Mapuje kod przycisku na opisujacy go lancuch
-static const char* keymap[] = {
-	0,
-	"1",
-	"2",
-	"3",
-	"Up",
-	"4",
-	"5",
-	"6",
-	"Down",
-	"7",
-	"8",
-	"9",
-	"Right",
-	"Clear",
-	"0",
-	"Enter",
-	"Left"
-};
-
 // Definicja pierwszego znaku w animacji
 static const char menu_cursor_sign[8] = {
 	0b00000,
