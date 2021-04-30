@@ -150,7 +150,8 @@ void on_key(uint8_t keycode) {
 	// Inicjalizuje zmienna przechowujaca stan wcisniecia przycisku
 	static uint8_t key_pressed = 0;
 
-	// Sprawdza czy ktorykolwiek przycisk jest wcisniety i czy przycisk nie jest trzymany
+	// Sprawdza czy ktorykolwiek przycisk jest wcisniety i czy przycisk
+	// nie jest trzymany
 	if (keycode > 0 && !key_pressed) {
 		// Okresla stan przycisku jako przytrzymany
 		key_pressed = 1;
