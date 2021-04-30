@@ -31,7 +31,6 @@ uint8_t keypad_read();
 void keypad_init();
 
 void lcd_text(char *chars);
-void lcd_fill(char c);
 void lcd_clear_from(uint8_t pos);
 
 void lcd_new_sign(char* sign, uint8_t index);
@@ -253,20 +252,6 @@ void lcd_anim() {
 	// Zawija kolejnosc klatek
 	if (anim == 3)
 			anim = 0;
-}
-
-/** Wypelnia LCD znakiem */
-void lcd_fill(char c) {
-	// Iteruje po liniach
-	for (uint8_t row, col = 0; row <= 1; row++) {
-
-		// Ustawia kursor na poczatku linii
-		lcd_move_cursor(row, 0);
-
-		// Iteruje po kolumnach i wyswietla znak
-		for (col = 0; col <= 16; col++)
-			lcd_send(c);
-	}
 }
 
 /** Kasuje w biezacym wierszu od pozycji */
