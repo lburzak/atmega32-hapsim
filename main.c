@@ -249,22 +249,6 @@ void menu_render() {
 	}
 }
 
-/** Wyswietla nastepna w kolejnosci klatke animacji */
-void lcd_anim() {
-	// Inicjalizuje zmienna do przechowywania indeksu klatki
-	static uint8_t anim = 0;
-
-	// Przenosi kursor na poczatek pierwszej linii
-	lcd_move_cursor(0, 0);
-
-	// Wyswietla klatke animacji i przechodzi do nastepnej klatki
-	lcd_send(anim++);
-
-	// Zawija kolejnosc klatek
-	if (anim == 3)
-			anim = 0;
-}
-
 /** Wypisuje tekst */
 void lcd_text(char *chars) {
 	// Iteruje po znakach we wskazanym lancuchu
