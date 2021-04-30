@@ -3,10 +3,10 @@
    <General>
       <Build>2005</Build>
       <Position>
-         <top>565</top>
-         <bottom>977</bottom>
-         <left>933</left>
-         <right>1591</right>
+         <top>117</top>
+         <bottom>529</bottom>
+         <left>790</left>
+         <right>1448</right>
       </Position>
       <StayOnTop>1</StayOnTop>
       <Target>ATmega32</Target>
@@ -99,7 +99,7 @@
                <PCKey>1720259952</PCKey>
             </Button>
             <Button index="3">
-               <Caption>Clear</Caption>
+               <Caption>NC</Caption>
                <PCKey>1720259896</PCKey>
             </Button>
             <Button index="4">
@@ -115,7 +115,7 @@
                <PCKey>0</PCKey>
             </Button>
             <Button index="7">
-               <Caption>0</Caption>
+               <Caption>NC</Caption>
                <PCKey>30873993</PCKey>
             </Button>
             <Button index="8">
@@ -131,7 +131,7 @@
                <PCKey>1720259896</PCKey>
             </Button>
             <Button index="11">
-               <Caption>Enter</Caption>
+               <Caption>0</Caption>
                <PCKey>1</PCKey>
             </Button>
             <Button index="12">
@@ -143,11 +143,11 @@
                <PCKey>0</PCKey>
             </Button>
             <Button index="14">
-               <Caption>Right</Caption>
+               <Caption>Clear</Caption>
                <PCKey>30873993</PCKey>
             </Button>
             <Button index="15">
-               <Caption>Left</Caption>
+               <Caption>Enter</Caption>
                <PCKey>2416455314</PCKey>
             </Button>
          </Buttons>
