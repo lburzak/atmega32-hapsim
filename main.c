@@ -128,7 +128,7 @@ static const struct Program program1 = {
 static const struct Menu menu_1 = {
 	.length = 1,
 	.routes = {
-		{PROGRAM, &program1, "Program 1.1"},
+		{PROGRAM, &program1, "Odczyt klawiat."},
 	},
 };
 
