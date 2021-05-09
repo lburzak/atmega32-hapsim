@@ -170,7 +170,7 @@ volatile uint8_t keycode = 0;
 volatile uint8_t cursor_row = 0;
 
 // Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
-ISR(TIMER0_COMP_vect) {
+ISR(TIMER2_COMP_vect) {
 	// Odczytuje kod przycisku
     keycode = keypad_read();
 }
@@ -435,23 +435,23 @@ void lcd_send_nibble(uint8_t byte) {
 	LCD_PORT &=~(_BV(LCD_EN));
 }
 
-/** Konfiguruje Timer 0 */
+/** Konfiguruje Timer 2 */
 void timer_init() {
-	// Ustawia Timer 0 w tryb CTC
-    TCCR0 |= (1 << WGM01) | (0 << WGM00);
+	// Ustawia Timer 2 w tryb CTC
+    TCCR2 |= (1 << WGM21) | (0 << WGM20);
 
 	// Ustawia preskaler 1/64
-    TCCR0 |= (1 << CS01) | (1 << CS00);
+    TCCR2 |= (1 << CS22);
 
 	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
     // Przerwanie ma wystepowac po 0.001 s
-    OCR0 = F_CPU / 64 * 0.001 - 1;
+    OCR2 = F_CPU / 64 * 0.001 - 1;
 
 	// Resetuje stan licznika
-    TCNT0 = 0;
+    TCNT2 = 0;
 
-	// Aktywuje przerwania Timera 0 w trybie CTC
-    TIMSK |= (1 << OCIE0);
+	// Aktywuje przerwania Timera 2 w trybie CTC
+    TIMSK |= (1 << OCIE2);
 
 	// Aktywuje obsluge przerwan
 	sei();
