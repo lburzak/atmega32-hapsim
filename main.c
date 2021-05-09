@@ -2,6 +2,8 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <string.h>
+#include <math.h>
+
 #define F_CPU 1000000L
 
 #define LCD_DDR DDRB
@@ -24,6 +26,8 @@
 #define KEY_DOWN 8
 #define KEY_ENTER 16
 #define KEY_CLEAR 12
+#define SW_1 2
+#define SW_2 3
 
 #define LED_DDR DDRC
 #define LED_PORT PORTC
@@ -32,6 +36,7 @@ uint8_t keypad_read();
 void keypad_init();
 
 void lcd_text(char *chars);
+void lcd_number(uint8_t num);
 
 void lcd_clear();
 void lcd_new_sign(char* sign, uint8_t index);
@@ -44,6 +49,7 @@ void lcd_send_nibble(uint8_t byte);
 void assert(uint8_t condition, char* message);
 
 void timer2_setup_interrupt(float period);
+static float timer2_tick_period = 60;
 
 // Struktura okreslajaca pojedyncze menu
 struct Menu {
@@ -173,6 +179,73 @@ static const struct Program button_counter = {
 	.on_tick = &button_counter_update,
 };
 
+static float seconds_elapsed = 0;
+static int stopwatch_seconds = 0;
+static uint8_t stopwatch_is_running = 0;
+
+void stopwatch_toggle() {
+	stopwatch_is_running = ~(stopwatch_is_running | 0xfe);
+	stopwatch_draw();
+}
+
+void stopwatch_reset() {
+	stopwatch_is_running = 0;
+	seconds_elapsed = 0;
+	stopwatch_seconds = 0;
+}
+
+void stopwatch_draw() {
+	lcd_clear();
+	lcd_move_cursor(0, 0);
+	lcd_text("Stoper  ");
+	if (stopwatch_is_running)
+		lcd_send(0);
+	else
+		lcd_text("||");
+
+
+	lcd_move_cursor(1, 0);
+	lcd_number(stopwatch_seconds);
+	lcd_text(" sekund");
+}
+
+void stopwatch_start() {
+	stopwatch_is_running = 1;
+	stopwatch_draw();
+}
+
+void stopwatch_key(uint8_t keycode) {
+	switch (keycode) {
+		case SW_1: stopwatch_toggle(); break;
+		case SW_2: 
+				stopwatch_reset();
+				stopwatch_draw();
+			break;
+	}
+}
+
+void stopwatch_tick() {
+	if (!stopwatch_is_running)
+		return;
+
+	seconds_elapsed += timer2_tick_period;
+
+	if (seconds_elapsed > 1) {
+		stopwatch_seconds++;
+
+		stopwatch_draw();
+
+		seconds_elapsed = 0;
+	}
+}
+
+static const struct Program stopwatch = {
+	.on_start = &stopwatch_start,
+	.on_key = &stopwatch_key,
+	.on_stop= &stopwatch_reset,
+	.on_tick = &stopwatch_tick,
+};
+
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
 	.length = 1,
@@ -185,7 +258,7 @@ static const struct Menu menu_2 = {
 	.length = 2,
 	.routes = {
 		{PROGRAM, &button_counter, "Licznik przyc."},
-		{MENU, NULL, "Program 2.2"},
+		{PROGRAM, &stopwatch, "Stoper"},
 	},
 };
 
@@ -235,7 +308,7 @@ int main() {
 	keypad_init();
 
 	// Inicjalizuje timer
-	timer2_setup_interrupt(0.001);
+	timer2_setup_interrupt(0.01);
 
 	// Tworzy znak kursora menu
 	lcd_new_sign(menu_cursor_sign, 0);
@@ -396,6 +469,17 @@ void lcd_text(char *chars) {
 	}
 }
 
+/** Wypisuje liczbe z zakresu 0-19 */
+void lcd_number(uint8_t num) {
+	if (num > 9) {
+		lcd_send(num / 10 + '0');
+		lcd_send(num % 10 + '0');
+	} else {
+		lcd_send(num + '0');
+		lcd_send(' ');
+	}
+}
+
 void lcd_clear() {
 	lcd_cmd(LCD_CLEAR);
 }
@@ -501,6 +585,8 @@ void timer2_setup_interrupt(float period) {
 	assert(counter_top < 256, "Invalid prescaler");
 
 	OCR2 = counter_top;
+
+	timer2_tick_period = period;
 
 	// Resetuje stan licznika
     TCNT2 = 0;

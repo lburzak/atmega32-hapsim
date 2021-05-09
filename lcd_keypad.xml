@@ -3,10 +3,10 @@
    <General>
       <Build>2005</Build>
       <Position>
-         <top>205</top>
-         <bottom>622</bottom>
-         <left>733</left>
-         <right>1150</right>
+         <top>212</top>
+         <bottom>684</bottom>
+         <left>887</left>
+         <right>1382</right>
       </Position>
       <StayOnTop>1</StayOnTop>
       <Target>ATmega32</Target>
@@ -45,6 +45,47 @@
             </RS_Pin>
          </PortMapping>
       </LCD>
+      <Buttons>
+         <Name>Buttons1</Name>
+         <Position>
+            <top>210</top>
+            <left>317</left>
+         </Position>
+         <Config index="0">
+            <Name>Button0</Name>
+            <PortPin>
+               <Port>PORTB</Port>
+               <Bit>0</Bit>
+            </PortPin>
+            <Invert>0</Invert>
+         </Config>
+         <Config index="1">
+            <Name>Button1</Name>
+            <PortPin>
+               <Port>PORTA</Port>
+               <Bit>5</Bit>
+            </PortPin>
+            <Invert>0</Invert>
+         </Config>
+         <Config index="2">
+            <Name>Button2</Name>
+            <PortPin>
+               <Port>PORTA</Port>
+               <Bit>6</Bit>
+            </PortPin>
+            <Invert>0</Invert>
+         </Config>
+         <Config index="3">
+            <Name>Button3</Name>
+            <PortPin>
+               <Port>PORTA</Port>
+               <Bit>7</Bit>
+            </PortPin>
+            <Invert>0</Invert>
+         </Config>
+         <TrinaryGroupEnable index="0">0</TrinaryGroupEnable>
+         <TrinaryGroupEnable index="1">0</TrinaryGroupEnable>
+      </Buttons>
       <LEDs>
          <Name>LEDs1</Name>
          <Position>
@@ -127,7 +168,7 @@
       <Keypad>
          <Name>Keypad1</Name>
          <Position>
-            <top>55</top>
+            <top>67</top>
             <left>4294967290</left>
          </Position>
          <PortMapping>
