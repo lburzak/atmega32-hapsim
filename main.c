@@ -63,6 +63,32 @@ void menu_up();
 struct Menu* menu_get_dest();
 void menu_navigate(struct Menu* dest);
 
+struct Program {
+	void (*on_start)();
+	void (*on_key)(uint8_t);
+};
+
+// Mapuje kod przycisku na opisujacy go lancuch
+static const char* keymap[] = {
+	0,
+	"1",
+	"2",
+	"3",
+	"Up",
+	"4",
+	"5",
+	"6",
+	"Down",
+	"7",
+	"8",
+	"9",
+	"Right",
+	"Clear",
+	"0",
+	"Enter",
+	"Left"
+};
+
 // Definicja znaku kursora menu
 static const char menu_cursor_sign[8] = {
 	0b00000,
@@ -109,8 +135,23 @@ static const struct Menu main_menu = {
 	},
 };
 
+
+void show_key(uint8_t keycode) {
+	lcd_text(keymap[keycode]);
+}
+
+void skip() {}
+
+static const struct Program program1 = {
+	.on_start = &skip,
+	.on_key = &show_key
+};
+
 // Inicjalizuje zmienna przechowujaca obecne menu
 static struct Menu* current_menu;
+
+// Inicjalizuje zmienna przechowujaca obecny program
+static struct Program* current_program;
 
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
