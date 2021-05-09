@@ -73,6 +73,8 @@ struct Program {
 	void (*on_key)(uint8_t);
 };
 
+void program_launch(struct Program* program);
+
 // Mapuje kod przycisku na opisujacy go lancuch
 static const char* keymap[] = {
 	0,
@@ -106,12 +108,25 @@ static const char menu_cursor_sign[8] = {
 	0b00000
 };
 
+
+void show_key(uint8_t keycode) {
+	lcd_text(keymap[keycode]);
+}
+
+void skip() {
+	show_key(8);
+}
+
+static const struct Program program1 = {
+	.on_start = &skip,
+	.on_key = &show_key
+};
+
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
 	.length = 2,
 	.routes = {
-		{MENU, NULL, "Program 1.1"},
-		{MENU, NULL, "Program 1.2"},
+		{PROGRAM, &program1, "Program 1.1"},
 	},
 };
 
@@ -138,18 +153,6 @@ static const struct Menu main_menu = {
 		{MENU, &menu_2, "Menu 2"},
 		{MENU, &menu_3, "Menu 3"},
 	},
-};
-
-
-void show_key(uint8_t keycode) {
-	lcd_text(keymap[keycode]);
-}
-
-void skip() {}
-
-static const struct Program program1 = {
-	.on_start = &skip,
-	.on_key = &show_key
 };
 
 // Inicjalizuje zmienna przechowujaca obecne menu
@@ -213,13 +216,26 @@ void on_key(uint8_t keycode) {
 	}
 }
 
+void program_launch(struct Program* program) {
+	current_program = program;
+	current_program->on_start();
+}
+
+void menu_advance() {
+	struct Route route = current_menu->routes[current_menu->current_option];
+	switch (route.type) {
+		case MENU: menu_navigate(route.destination); break;
+		case PROGRAM: program_launch(route.destination); break;
+	}
+}
+
 /** Przeprowadza akcje w zaleznosci od kodu przycisku */
 void handle_key(uint8_t keycode) {
 	switch (keycode) {
 		case KEY_UP: menu_up(); break;
 		case KEY_DOWN: menu_down(); break;
 		case KEY_CLEAR: menu_navigate(&main_menu); break;
-		case KEY_ENTER: menu_navigate(menu_get_dest()); break;
+		case KEY_ENTER: menu_advance(); break;
 	}
 }
 
