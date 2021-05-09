@@ -28,8 +28,6 @@
 #define LED_DDR DDRC
 #define LED_PORT PORTC
 
-void timer_init();
-
 uint8_t keypad_read();
 void keypad_init();
 
@@ -42,6 +40,10 @@ void lcd_move_cursor(unsigned char w, unsigned char h);
 void lcd_cmd(uint8_t byte);
 void lcd_send(uint8_t byte);
 void lcd_send_nibble(uint8_t byte);
+
+void assert(uint8_t condition, char* message);
+
+void timer2_setup_interrupt(float period);
 
 // Struktura okreslajaca pojedyncze menu
 struct Menu {
@@ -223,14 +225,14 @@ ISR(TIMER2_COMP_vect) {
 }
 
 int main() {
+	// Inicjalizuje LCD
+	lcd_init();
+
 	// Inicjalizuje klawiature
 	keypad_init();
 
 	// Inicjalizuje timer
-	timer_init();
-
-	// Inicjalizuje LCD
-	lcd_init();
+	timer2_setup_interrupt(0.001);
 
 	// Tworzy znak kursora menu
 	lcd_new_sign(menu_cursor_sign, 0);
@@ -483,7 +485,7 @@ void lcd_send_nibble(uint8_t byte) {
 }
 
 /** Konfiguruje Timer 2 */
-void timer_init() {
+void timer2_setup_interrupt(float period) {
 	// Ustawia Timer 2 w tryb CTC
     TCCR2 |= (1 << WGM21) | (0 << WGM20);
 
@@ -492,7 +494,10 @@ void timer_init() {
 
 	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
     // Przerwanie ma wystepowac po 0.001 s
-    OCR2 = F_CPU / 64 * 0.001 - 1;
+    int counter_top = F_CPU / 64 * period - 1;
+	assert(counter_top < 256, "Invalid prescaler");
+
+	OCR2 = counter_top;
 
 	// Resetuje stan licznika
     TCNT2 = 0;
@@ -540,4 +545,11 @@ uint8_t keypad_read() {
 
 	// Zaden wcisniety przycisk nie zostal wykryty w petli
     return 0;
+}
+
+void assert(uint8_t condition, char* message) {
+	if (condition != 1) {
+		lcd_text(strcat("E:", message));
+		_delay_ms(1000);
+	}
 }
