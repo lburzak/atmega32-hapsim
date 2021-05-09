@@ -70,6 +70,7 @@ void menu_navigate(struct Menu* dest);
 
 struct Program {
 	void (*on_start)();
+	void (*on_stop)();
 	void (*on_key)(uint8_t);
 };
 
@@ -113,13 +114,12 @@ void show_key(uint8_t keycode) {
 	lcd_text(keymap[keycode]);
 }
 
-void skip() {
-	show_key(8);
-}
+void skip() {}
 
 static const struct Program program1 = {
 	.on_start = &skip,
-	.on_key = &show_key
+	.on_key = &show_key,
+	.on_stop = &skip,
 };
 
 // Definicje posczegolnych menu
@@ -159,7 +159,7 @@ static const struct Menu main_menu = {
 static struct Menu* current_menu;
 
 // Inicjalizuje zmienna przechowujaca obecny program
-static struct Program* current_program;
+static struct Program* current_program = NULL;
 
 // Inicjalizuje zmienna przechowujaca kod wcisnietego przycisku
 volatile uint8_t keycode = 0;
@@ -221,6 +221,16 @@ void program_launch(struct Program* program) {
 	current_program->on_start();
 }
 
+void program_close() {
+	current_program = NULL;
+	current_program->on_stop();
+	menu_render();
+}
+
+int program_is_running() {
+	return current_program != NULL;
+}
+
 void menu_advance() {
 	struct Route route = current_menu->routes[current_menu->current_option];
 	switch (route.type) {
@@ -231,11 +241,18 @@ void menu_advance() {
 
 /** Przeprowadza akcje w zaleznosci od kodu przycisku */
 void handle_key(uint8_t keycode) {
-	switch (keycode) {
-		case KEY_UP: menu_up(); break;
-		case KEY_DOWN: menu_down(); break;
-		case KEY_CLEAR: menu_navigate(&main_menu); break;
-		case KEY_ENTER: menu_advance(); break;
+	if (program_is_running()) {
+		switch (keycode) {
+			case KEY_CLEAR: program_close(); break;
+			default: current_program->on_key(keycode);
+		}			
+	} else {
+		switch (keycode) {
+			case KEY_UP: menu_up(); break;
+			case KEY_DOWN: menu_down(); break;
+			case KEY_CLEAR: menu_navigate(&main_menu); break;
+			case KEY_ENTER: menu_advance(); break;
+		}
 	}
 }
 
