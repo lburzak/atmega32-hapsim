@@ -32,6 +32,7 @@ void keypad_init();
 
 void lcd_text(char *chars);
 
+void lcd_clear();
 void lcd_new_sign(char* sign, uint8_t index);
 void lcd_init();
 void lcd_move_cursor(unsigned char w, unsigned char h);
@@ -111,13 +112,14 @@ static const char menu_cursor_sign[8] = {
 
 
 void show_key(uint8_t keycode) {
+	lcd_clear();
 	lcd_text(keymap[keycode]);
 }
 
 void skip() {}
 
 static const struct Program program1 = {
-	.on_start = &skip,
+	.on_start = &lcd_clear,
 	.on_key = &show_key,
 	.on_stop = &skip,
 };
@@ -340,6 +342,10 @@ void lcd_text(char *chars) {
 		// Wypisuje znak
 		lcd_send(chars[i]);
 	}
+}
+
+void lcd_clear() {
+	lcd_cmd(LCD_CLEAR);
 }
 
 /** Rejestruje nowy znak w pamieci LCD */
