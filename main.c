@@ -49,8 +49,13 @@ struct Menu {
 
 	// Przechowuje pozycje menu
 	struct Route {
+		enum {
+			MENU,
+			PROGRAM
+		} type;
+
 		// Przechowuje menu docelowe pozycji
-		struct Menu* destination;
+		void *destination;
 
 		// Przechowuje opis pozycji
 		char label[16];
@@ -105,33 +110,33 @@ static const char menu_cursor_sign[8] = {
 static const struct Menu menu_1 = {
 	.length = 2,
 	.routes = {
-		{NULL, "Program 1.1"},
-		{NULL, "Program 1.2"},
+		{MENU, NULL, "Program 1.1"},
+		{MENU, NULL, "Program 1.2"},
 	},
 };
 
 static const struct Menu menu_2 = {
 	.length = 2,
 	.routes = {
-		{NULL, "Program 2.1"},
-		{NULL, "Program 2.2"},
+		{MENU, NULL, "Program 2.1"},
+		{MENU, NULL, "Program 2.2"},
 	},
 };
 
 static const struct Menu menu_3 = {
 	.length = 2,
 	.routes = {
-		{NULL, "Program 3.1"},
-		{&menu_1, "Menu 1"},
+		{MENU, NULL, "Program 3.1"},
+		{MENU, &menu_1, "Menu 1"},
 	},
 };
 
 static const struct Menu main_menu = {
 	.length = 3,
 	.routes = {
-		{&menu_1, "Menu 1"},
-		{&menu_2, "Menu 2"},
-		{&menu_3, "Menu 3"},
+		{MENU, &menu_1, "Menu 1"},
+		{MENU, &menu_2, "Menu 2"},
+		{MENU, &menu_3, "Menu 3"},
 	},
 };
 
