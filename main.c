@@ -124,7 +124,7 @@ static const struct Program program1 = {
 
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
-	.length = 2,
+	.length = 1,
 	.routes = {
 		{PROGRAM, &program1, "Program 1.1"},
 	},
