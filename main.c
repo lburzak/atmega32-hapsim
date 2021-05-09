@@ -78,6 +78,7 @@ struct Program {
 	void (*on_start)();
 	void (*on_stop)();
 	void (*on_key)(uint8_t);
+	void (*on_tick)();
 };
 
 void program_launch(struct Program* program);
@@ -127,11 +128,10 @@ static const struct Program program1 = {
 	.on_start = &lcd_clear,
 	.on_key = &show_key,
 	.on_stop = &skip,
+	.on_tick = &skip,
 };
 
-static volatile uint8_t led_value = 0;
-
-void start_button_counter() {
+void button_counter_start() {
 	LED_DDR = 0xFF;
 	LED_PORT = 0x00;
 
@@ -144,7 +144,7 @@ void start_button_counter() {
 	lcd_clear();
 }
 
-void stop_button_counter() {
+void button_counter_stop() {
 	LED_DDR = 0x00;
 	LED_PORT = 0x00;
 
@@ -152,10 +152,25 @@ void stop_button_counter() {
 	TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
 }
 
-static const struct Program program2 = {
-	.on_start = &start_button_counter,
+void button_counter_update() {
+	uint8_t counter = TCNT0;
+
+	// Ustawia LEDy w taki sposób aby odzwierciedlaly liczbe nacisniec
+	LED_PORT = counter;
+
+	// Sprawdza stan flagi przepelnienia
+	if (TIFR & (1 << TOV0)) {
+
+		// Zatrzymuje timer
+		TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
+	}
+}
+
+static const struct Program button_counter = {
+	.on_start = &button_counter_start,
 	.on_key = &skip,
-	.on_stop = &stop_button_counter,
+	.on_stop = &button_counter_stop,
+	.on_tick = &button_counter_update,
 };
 
 // Definicje posczegolnych menu
@@ -169,7 +184,7 @@ static const struct Menu menu_1 = {
 static const struct Menu menu_2 = {
 	.length = 2,
 	.routes = {
-		{PROGRAM, &program2, "Licznik przyc."},
+		{PROGRAM, &button_counter, "Licznik przyc."},
 		{MENU, NULL, "Program 2.2"},
 	},
 };
@@ -203,25 +218,13 @@ volatile uint8_t keycode = 0;
 // Inicjalizuje zmienna przechowujaca numer biezacej linii LCD
 volatile uint8_t cursor_row = 0;
 
-// Obsluguje przerwania wywolane przez Timer 0 w trybie CTC
+// Obsluguje przerwania wywolane przez Timer 2 w trybie CTC
 ISR(TIMER2_COMP_vect) {
 	// Odczytuje kod przycisku
     keycode = keypad_read();
 
-	if (current_program == &program2) {
-		// Odczytuje stan licznika
-		uint8_t counter = TCNT0;
-
-		// Ustawia LEDy w taki sposób aby odzwierciedlaly liczbe nacisniec
-		LED_PORT = counter;
-
-		// Sprawdza stan flagi przepelnienia
-		if (TIFR & (1 << TOV0)) {
-
-			// Zatrzymuje timer
-			TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
-		}
-	}
+	if (program_is_running())
+		current_program->on_tick();
 }
 
 int main() {
