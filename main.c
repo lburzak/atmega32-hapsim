@@ -25,6 +25,9 @@
 #define KEY_ENTER 16
 #define KEY_CLEAR 12
 
+#define LED_DDR DDRC
+#define LED_PORT PORTC
+
 void timer_init();
 
 uint8_t keypad_read();
@@ -124,6 +127,35 @@ static const struct Program program1 = {
 	.on_stop = &skip,
 };
 
+static volatile uint8_t led_value = 0;
+
+void start_button_counter() {
+	LED_DDR = 0xFF;
+	LED_PORT = 0x00;
+
+	// Ustawia prescaler zbocza opadajacego, tryb NORMAL
+	TCCR0 |= (1 << CS02) | (1 << CS01);
+
+	// Zeruje licznik
+	TCNT0 = 0;
+
+	lcd_clear();
+}
+
+void stop_button_counter() {
+	LED_DDR = 0x00;
+	LED_PORT = 0x00;
+
+	// Wylacza Timer0
+	TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
+}
+
+static const struct Program program2 = {
+	.on_start = &start_button_counter,
+	.on_key = &skip,
+	.on_stop = &stop_button_counter,
+};
+
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
 	.length = 1,
@@ -135,7 +167,7 @@ static const struct Menu menu_1 = {
 static const struct Menu menu_2 = {
 	.length = 2,
 	.routes = {
-		{MENU, NULL, "Program 2.1"},
+		{PROGRAM, &program2, "Licznik przyc."},
 		{MENU, NULL, "Program 2.2"},
 	},
 };
@@ -173,6 +205,21 @@ volatile uint8_t cursor_row = 0;
 ISR(TIMER2_COMP_vect) {
 	// Odczytuje kod przycisku
     keycode = keypad_read();
+
+	if (current_program == &program2) {
+		// Odczytuje stan licznika
+		uint8_t counter = TCNT0;
+
+		// Ustawia LEDy w taki sposób aby odzwierciedlaly liczbe nacisniec
+		LED_PORT = counter;
+
+		// Sprawdza stan flagi przepelnienia
+		if (TIFR & (1 << TOV0)) {
+
+			// Zatrzymuje timer
+			TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
+		}
+	}
 }
 
 int main() {
