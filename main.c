@@ -246,6 +246,49 @@ static const struct Program stopwatch = {
 	.on_tick = &stopwatch_tick,
 };
 
+static volatile uint8_t i;
+static volatile uint8_t back;
+
+void leds_run() {
+	lcd_clear();
+
+	LED_DDR = 0xFF;
+
+	i = 7; // Ustawia licznik. Zaczynamy od najstarszych bitow.
+	back = 0; // Ustawia, czy wyswietlanie "wraca" w strone starszych bitow
+}
+
+void leds_tick() {
+	if(i == 1) back = 1; // Jesli jestesmy przy najmlodszym bicie, zawracamy
+
+	LED_PORT = 0x00;
+	LED_PORT^= _BV(i) | _BV(i-1); // Neguje bity ustawione w masce
+
+	if(back) {
+		//_delay_ms(1000);
+		i++; // Inkrementuje licznik
+	} else {
+		//_delay_ms(500);
+		i--; // Dekrementuje licznik
+	}
+
+	// Jesli zawracamy i jestesmy przy najstarszym bicie, przestajemy zawracac
+	if(back && i == 7) {
+		back = 0;
+	}
+}
+
+void leds_stop() {
+	LED_DDR = 0x00;
+}
+
+static const struct Program leds = {
+	.on_start = &leds_run,
+	.on_tick = &leds_tick,
+	.on_stop = &leds_stop,
+	.on_key = &skip,
+};
+
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
 	.length = 1,
@@ -265,7 +308,7 @@ static const struct Menu menu_2 = {
 static const struct Menu menu_3 = {
 	.length = 2,
 	.routes = {
-		{MENU, NULL, "Program 3.1"},
+		{PROGRAM, &leds, "Pokaz LEDow"},
 		{MENU, &menu_1, "Menu 1"},
 	},
 };
