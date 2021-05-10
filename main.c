@@ -161,7 +161,7 @@ void button_counter_stop() {
 void button_counter_update() {
 	uint8_t counter = TCNT0;
 
-	// Ustawia LEDy w taki sposób aby odzwierciedlaly liczbe nacisniec
+	// Ustawia LEDy w taki sposï¿½b aby odzwierciedlaly liczbe nacisniec
 	LED_PORT = counter;
 
 	// Sprawdza stan flagi przepelnienia
@@ -291,9 +291,10 @@ static const struct Program leds = {
 
 // Definicje posczegolnych menu
 static const struct Menu menu_1 = {
-	.length = 1,
+	.length = 2,
 	.routes = {
 		{PROGRAM, &program1, "Odczyt klawiat."},
+		{MENU, NULL, "Program 1.2"},
 	},
 };
 
