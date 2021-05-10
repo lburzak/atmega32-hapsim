@@ -218,12 +218,14 @@ void stopwatch_draw() {
 	lcd_move_cursor(0, 0);
 	lcd_text("Stoper  ");
 
+	// Wyswietla odpowiednia "ikone"
 	if (stopwatch_is_running)
 		lcd_send(0);
 	else
 		lcd_text("||");
 
 
+	// Wyswietla liczbe zliczonych sekund
 	lcd_move_cursor(1, 0);
 	lcd_number(stopwatch_seconds);
 	lcd_text(" sekund");
