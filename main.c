@@ -61,6 +61,7 @@ struct Menu {
 
 	// Przechowuje pozycje menu
 	struct Route {
+		// Przechowuje typ pozycji
 		enum {
 			MENU,
 			PROGRAM
@@ -80,6 +81,8 @@ void menu_up();
 struct Menu* menu_get_dest();
 void menu_navigate(struct Menu* dest);
 
+// Definicja struktury okreslajacej pojedynczy program
+// Przechowuje wskazniki funkcji obslugujacych poszczegolne zdarzenia
 struct Program {
 	void (*on_start)();
 	void (*on_stop)();
@@ -122,14 +125,18 @@ static const char menu_cursor_sign[8] = {
 	0b00000
 };
 
+// Pusta funkcja - pozwala na pominiecie zdarzenia
+void skip() {}
 
+// ------------------------- PROGRAM 1 ----------------------------
+
+// Wyswietla opis przycisku na ekranie
 void show_key(uint8_t keycode) {
 	lcd_clear();
 	lcd_text(keymap[keycode]);
 }
 
-void skip() {}
-
+// Inicjalizacja pierwszego programu
 static const struct Program program1 = {
 	.on_start = &lcd_clear,
 	.on_key = &show_key,
@@ -137,6 +144,9 @@ static const struct Program program1 = {
 	.on_tick = &skip,
 };
 
+// ------------------------- PROGRAM 2 ----------------------------
+
+// Program 2 - rozruch
 void button_counter_start() {
 	LED_DDR = 0xFF;
 	LED_PORT = 0x00;
@@ -150,6 +160,7 @@ void button_counter_start() {
 	TCNT0 = 0;
 }
 
+// Program 2 - deaktywacja ledow i zatrzymanie timera
 void button_counter_stop() {
 	LED_PORT = 0x00;
 	LED_DDR = 0x00;
@@ -158,6 +169,7 @@ void button_counter_stop() {
 	TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
 }
 
+// Program 2 - sterowanie diodami
 void button_counter_update() {
 	uint8_t counter = TCNT0;
 
@@ -172,6 +184,7 @@ void button_counter_update() {
 	}
 }
 
+// Inicjalizacja programu 2
 static const struct Program button_counter = {
 	.on_start = &button_counter_start,
 	.on_key = &skip,
@@ -179,21 +192,25 @@ static const struct Program button_counter = {
 	.on_tick = &button_counter_update,
 };
 
+// ------------------------- PROGRAM 3 ----------------------------
 static float seconds_elapsed = 0;
 static int stopwatch_seconds = 0;
 static uint8_t stopwatch_is_running = 0;
 
+// Start/stop stopera
 void stopwatch_toggle() {
 	stopwatch_is_running = ~(stopwatch_is_running | 0xfe);
 	stopwatch_draw();
 }
 
+// Resetuje stoper
 void stopwatch_reset() {
 	stopwatch_is_running = 0;
 	seconds_elapsed = 0;
 	stopwatch_seconds = 0;
 }
 
+// Wyswietla stoper
 void stopwatch_draw() {
 	lcd_clear();
 	lcd_move_cursor(0, 0);
@@ -209,11 +226,13 @@ void stopwatch_draw() {
 	lcd_text(" sekund");
 }
 
+// Inicjalizuje stoper
 void stopwatch_start() {
 	stopwatch_is_running = 1;
 	stopwatch_draw();
 }
 
+// Obsluguje przyciski stopera
 void stopwatch_key(uint8_t keycode) {
 	switch (keycode) {
 		case SW_1: stopwatch_toggle(); break;
@@ -224,6 +243,7 @@ void stopwatch_key(uint8_t keycode) {
 	}
 }
 
+// Obsluguje impulsy zegara
 void stopwatch_tick() {
 	if (!stopwatch_is_running)
 		return;
@@ -239,6 +259,7 @@ void stopwatch_tick() {
 	}
 }
 
+// Inicjalizacja programu stopera
 static const struct Program stopwatch = {
 	.on_start = &stopwatch_start,
 	.on_key = &stopwatch_key,
@@ -246,18 +267,24 @@ static const struct Program stopwatch = {
 	.on_tick = &stopwatch_tick,
 };
 
+// ------------------------- PROGRAM 4 ----------------------------
 static volatile uint8_t i;
 static volatile uint8_t back;
 
+// Inicjalizuje pokaz ledow
 void leds_run() {
 	lcd_clear();
 
 	LED_DDR = 0xFF;
 
-	i = 7; // Ustawia licznik. Zaczynamy od najstarszych bitow.
-	back = 0; // Ustawia, czy wyswietlanie "wraca" w strone starszych bitow
+	// Ustawia licznik. Zaczynamy od najstarszych bitow.
+	i = 7;
+
+	 // Ustawia, czy wyswietlanie "wraca" w strone starszych bitow
+	back = 0;
 }
 
+// Obsluguje impuls zegara aby wyswietlic nastepny krok ledow
 void leds_tick() {
 	if(i == 1) back = 1; // Jesli jestesmy przy najmlodszym bicie, zawracamy
 
@@ -265,10 +292,8 @@ void leds_tick() {
 	LED_PORT^= _BV(i) | _BV(i-1); // Neguje bity ustawione w masce
 
 	if(back) {
-		//_delay_ms(1000);
 		i++; // Inkrementuje licznik
 	} else {
-		//_delay_ms(500);
 		i--; // Dekrementuje licznik
 	}
 
@@ -278,10 +303,12 @@ void leds_tick() {
 	}
 }
 
+// Zatrzymuje pokaz ledow
 void leds_stop() {
 	LED_DDR = 0x00;
 }
 
+// Inicjalizacja programu pokazu ledow
 static const struct Program leds = {
 	.on_start = &leds_run,
 	.on_tick = &leds_tick,
@@ -387,23 +414,30 @@ void on_key(uint8_t keycode) {
 	}
 }
 
+// Uruchamia okreslony program
 void program_launch(struct Program* program) {
 	current_program = program;
 	current_program->on_start();
 }
 
+// Zamyka obecny program
 void program_close() {
 	current_program->on_stop();
 	current_program = NULL;
 	menu_render();
 }
 
+// Sprawdza czy jakis program jest otwarty
 int program_is_running() {
 	return current_program != NULL;
 }
 
+// Uruchamia wybrana pozycje menu
 void menu_advance() {
 	struct Route route = current_menu->routes[current_menu->current_option];
+
+	// Jesli pozycja wskazuje na menu, przechodzi do tego menu
+	// Jesli pozycja wskazuje na program, uruchamia ten program
 	switch (route.type) {
 		case MENU: menu_navigate(route.destination); break;
 		case PROGRAM: program_launch(route.destination); break;
@@ -615,7 +649,8 @@ void lcd_send_nibble(uint8_t byte) {
 	LCD_PORT &=~(_BV(LCD_EN));
 }
 
-/** Konfiguruje Timer 2 */
+/** Konfiguruje Timer 2 w taki sposob aby generowal impuls
+	co czesc sekundy okreslona w argumencie */
 void timer2_setup_interrupt(float period) {
 	// Ustawia Timer 2 w tryb CTC
     TCCR2 |= (1 << WGM21) | (0 << WGM20);
@@ -623,13 +658,16 @@ void timer2_setup_interrupt(float period) {
 	// Ustawia preskaler 1/64
     TCCR2 |= (1 << CS22);
 
-	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie
-    // Przerwanie ma wystepowac po 0.001 s
+	// Oblicza liczbe impulsow, po ktorej nastepuje przerwanie
     int counter_top = F_CPU / 64 * period - 1;
+
+	// Sprawdza czy obecny preskaler pozwala na obsluzenie wybranego okresu
 	assert(counter_top < 256, "Invalid prescaler");
 
+	// Ustawia liczbe impulsow, po ktorej nastepuje przerwanie 
 	OCR2 = counter_top;
 
+	// Okresla okres impulsow na potrzeby stopera
 	timer2_tick_period = period;
 
 	// Resetuje stan licznika
@@ -680,6 +718,7 @@ uint8_t keypad_read() {
     return 0;
 }
 
+// Pozwala na sprawdzenie blednych warunkow
 void assert(uint8_t condition, char* message) {
 	if (condition != 1) {
 		lcd_text(strcat("E:", message));
