@@ -393,8 +393,8 @@ void program_launch(struct Program* program) {
 }
 
 void program_close() {
-	current_program = NULL;
 	current_program->on_stop();
+	current_program = NULL;
 	menu_render();
 }
 
