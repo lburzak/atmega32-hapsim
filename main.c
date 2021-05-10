@@ -142,17 +142,17 @@ void button_counter_start() {
 	LED_PORT = 0x00;
 
 	// Ustawia prescaler zbocza opadajacego, tryb NORMAL
-	TCCR0 |= (1 << CS02) | (1 << CS01);
+	TCCR0 |= (1 << CS02) | (1 << CS01) | (1 << CS00);
+
+	lcd_clear();
 
 	// Zeruje licznik
 	TCNT0 = 0;
-
-	lcd_clear();
 }
 
 void button_counter_stop() {
-	LED_DDR = 0x00;
 	LED_PORT = 0x00;
+	LED_DDR = 0x00;
 
 	// Wylacza Timer0
 	TCCR0 &= (0 << CS02) | (0 << CS01) | (0 << CS00);
@@ -161,7 +161,7 @@ void button_counter_stop() {
 void button_counter_update() {
 	uint8_t counter = TCNT0;
 
-	// Ustawia LEDy w taki spos�b aby odzwierciedlaly liczbe nacisniec
+	// Ustawia LEDy w taki sposob aby odzwierciedlaly liczbe nacisniec
 	LED_PORT = counter;
 
 	// Sprawdza stan flagi przepelnienia
