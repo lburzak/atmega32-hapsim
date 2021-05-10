@@ -3,10 +3,10 @@
    <General>
       <Build>2005</Build>
       <Position>
-         <top>212</top>
-         <bottom>684</bottom>
-         <left>887</left>
-         <right>1382</right>
+         <top>247</top>
+         <bottom>719</bottom>
+         <left>1046</left>
+         <right>1541</right>
       </Position>
       <StayOnTop>1</StayOnTop>
       <Target>ATmega32</Target>
