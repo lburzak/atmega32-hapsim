@@ -392,7 +392,7 @@ int main() {
 	// Inicjalizuje klawiature
 	keypad_init();
 
-	// Inicjalizuje timer
+	// Inicjalizuje timer glowny
 	timer2_setup_interrupt(0.01);
 
 	// Tworzy znak kursora menu
