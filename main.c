@@ -199,7 +199,9 @@ static uint8_t stopwatch_is_running = 0;
 
 // Start/stop stopera
 void stopwatch_toggle() {
+	// Neguje stan zatrzymania stopera
 	stopwatch_is_running = ~(stopwatch_is_running | 0xfe);
+
 	stopwatch_draw();
 }
 
@@ -215,6 +217,7 @@ void stopwatch_draw() {
 	lcd_clear();
 	lcd_move_cursor(0, 0);
 	lcd_text("Stoper  ");
+
 	if (stopwatch_is_running)
 		lcd_send(0);
 	else
@@ -245,16 +248,23 @@ void stopwatch_key(uint8_t keycode) {
 
 // Obsluguje impulsy zegara
 void stopwatch_tick() {
+	// Jezeli stoper jest zatrzymany, ignoruje impuls
 	if (!stopwatch_is_running)
 		return;
 
+	// Sumuje czas pomiedzy impulsami
 	seconds_elapsed += timer2_tick_period;
 
+	// Jezeli suma czasu pomiedzy impulsami jest wieksza niz 1,
+	// oznacza to ze minela sekunda
 	if (seconds_elapsed > 1) {
+		// Zwieksza licznik wyswietlany przez stoper
 		stopwatch_seconds++;
 
+		// Wyswietla stoper
 		stopwatch_draw();
 
+		// Resetuje sume czasu pomiedzy impulsami
 		seconds_elapsed = 0;
 	}
 }
@@ -367,7 +377,9 @@ ISR(TIMER2_COMP_vect) {
 	// Odczytuje kod przycisku
     keycode = keypad_read();
 
+	// Jezeli jakis program jest otworzony
 	if (program_is_running())
+		// Wywoluje funkcje obslugujaca impuls
 		current_program->on_tick();
 }
 
@@ -416,14 +428,22 @@ void on_key(uint8_t keycode) {
 
 // Uruchamia okreslony program
 void program_launch(struct Program* program) {
+	// Ustawia okreslony program jako obecnie otwarty
 	current_program = program;
+
+	// Wywoluje funkcje obslugujaca rozruch programu
 	current_program->on_start();
 }
 
 // Zamyka obecny program
 void program_close() {
+	// Wywoluje funkcje obslugujaca zamykanie programu
 	current_program->on_stop();
+
+	// Czysci wskaznik do obecnego programu
 	current_program = NULL;
+
+	// Wyswietla menu
 	menu_render();
 }
 
@@ -447,11 +467,14 @@ void menu_advance() {
 /** Przeprowadza akcje w zaleznosci od kodu przycisku */
 void handle_key(uint8_t keycode) {
 	if (program_is_running()) {
+		// Jezeli program dziala, zamyka program lub
+		// wywoluje funkcje obslugujaca przycisk klawiatury
 		switch (keycode) {
 			case KEY_CLEAR: program_close(); break;
 			default: current_program->on_key(keycode);
 		}			
 	} else {
+		// Jezeli zaden program nie dziala, obsluguje nawigacje w menu
 		switch (keycode) {
 			case KEY_UP: menu_up(); break;
 			case KEY_DOWN: menu_down(); break;
